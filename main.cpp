@@ -37,21 +37,33 @@ PolarCoordinate convertToPolarCoordinate(float radius, float angle)
   return coordinate;
 }
 
-// Calcula os pontos da orbita com base em coordenadas polares
-void drawOrbit(GLfloat radius)
+void drawCircle(GLfloat radius, GLenum mode)
 {
+
   float deltaTheta = 0.1f;
 
-  glBegin(GL_LINE_LOOP);
-
-  glColor3f(1.0f, 1.0f, 1.0f);
+  glBegin(mode);
 
   for (float angle = 0; angle < 2 * M_PI; angle += deltaTheta)
   {
     PolarCoordinate coordinate = convertToPolarCoordinate(radius, angle);
     glVertex2f(coordinate.x, coordinate.y);
   }
+
   glEnd();
+}
+
+// Calcula os pontos da orbita com base em coordenadas polares
+void drawOrbit(GLfloat radius)
+{
+  glColor3f(1.0f, 1.0f, 1.0f);
+  drawCircle(radius, GL_LINE_LOOP);
+}
+
+void drawSun(GLfloat radius)
+{
+  glColor3f(255.0f, 255.0f, 0.0f);
+  drawCircle(radius, GL_POLYGON);
 }
 
 void draw()
@@ -59,12 +71,15 @@ void draw()
   glClear(GL_COLOR_BUFFER_BIT);
   float radius = 150;
 
+  drawSun(100);
+
   for (int i = 0; i < 8; i++)
   {
 
     drawOrbit(radius);
     radius += 50;
   }
+
   glFlush();
 }
 
