@@ -34,13 +34,25 @@ struct PolarCoordinate
   float y;
 };
 
-float planet_angles[8] = {};
+float planet_translate_angles[8] = {};
+float planet_rotate_angles[8] = {};
 float planet_position[8] = {};
-float planet_radius[8] = {8, 7, 16, 14, 19, 15, 15, 15};
+float planet_radius[8] = {12, 16, 16, 14, 24, 22, 20, 18};
 int qtd_rings[8] = {0, 0, 0, 0, 1, 4, 2, 1};
 int qtd_satellites[8] = {0, 0, 1, 2, 1, 1, 1, 2};
-float rotation_time[8] = {};
+float rotation_time[8] = {59, 243, 0.24, 0.2437, 0.0955, 0.1014, 0.17, 0.16};
 float translation_time[8] = {87, 225, 365, 687, 1200, 3000, 8400, 1640};
+
+bool show_orbit = true;
+bool show_mercury = true;
+bool show_venus = true;
+bool show_earth = true;
+bool show_mars = true;
+bool show_jupiter = true;
+bool show_saturn = true;
+bool show_uranus = true;
+bool show_neptune = true;
+bool pause_simulation = false;
 
 PolarCoordinate
 convertToPolarCoordinate(float radius, float angle)
@@ -77,7 +89,7 @@ void drawOrbit(GLfloat radius)
 
 void drawSun(GLfloat radius)
 {
-  glColor3f(255.0f, 255.0f, 0.0f);
+  glColor3f(0.98f, 0.93f, 0.19f);
   drawCircle(radius, GL_POLYGON);
 }
 
@@ -86,7 +98,7 @@ void drawPlanet(GLfloat planet_radius, RgbColor color, int qtd_rings, int qtd_sa
   float ring_radius = planet_radius + 10;
 
   // Desenha os aneis
-  if (qtd_rings > 0)
+  if (qtd_rings > 0 && show_orbit)
   {
 
     for (int i = 0; i < qtd_rings; i++)
@@ -106,19 +118,21 @@ void drawPlanet(GLfloat planet_radius, RgbColor color, int qtd_rings, int qtd_sa
 
     PolarCoordinate coordinate = convertToPolarCoordinate(ring_radius, 1);
 
+    glPushMatrix();
     glColor3f(1.0f, 1.0f, 1.0f);
     glTranslatef(coordinate.x, coordinate.y, 0);
     drawCircle(6, GL_POLYGON);
-    glTranslatef(-coordinate.x, -coordinate.y, 0);
+    glPopMatrix();
 
     if (satellites[j] > 1)
     {
       PolarCoordinate coordinate = convertToPolarCoordinate(ring_radius, 180);
 
+      glPushMatrix();
       glColor3f(1.0f, 1.0f, 1.0f);
       glTranslatef(coordinate.x, coordinate.y, 0);
       drawCircle(6, GL_POLYGON);
-      glTranslatef(-coordinate.x, -coordinate.y, 0);
+      glPopMatrix();
     }
   }
 
@@ -126,14 +140,16 @@ void drawPlanet(GLfloat planet_radius, RgbColor color, int qtd_rings, int qtd_sa
   drawCircle(planet_radius, GL_POLYGON);
 }
 
-void drawPlanetInPosition(float position, float angle, float planet_radius, RgbColor color, int qtd_rings, int qtd_satellites, int *satellites_rings)
+void drawPlanetInPosition(float position, float angle, float rotate_angle, float planet_radius, RgbColor color, int qtd_rings, int qtd_satellites, int *satellites_rings)
 {
+  glPushMatrix();
   PolarCoordinate coordinate = convertToPolarCoordinate(position, angle);
   glTranslatef(coordinate.x, coordinate.y, 0);
+  glRotatef(rotate_angle, 0.0f, 0.0f, 0.0f);
 
   drawPlanet(planet_radius, color, qtd_rings, qtd_satellites, satellites_rings);
 
-  glTranslatef(-coordinate.x, -coordinate.y, 0);
+  glPopMatrix();
 }
 
 void draw()
@@ -142,104 +158,117 @@ void draw()
   float radius = 130;
   float angle = 0;
 
-  glViewport(0, 0, 1000, 1000);
+  glViewport(0, 0, 800, 600);
 
   glClear(GL_COLOR_BUFFER_BIT);
 
   drawSun(80);
 
-  for (int i = 0; i < 8; i++)
+  for (int i = 0; i < 8 && show_orbit; i++)
   {
     drawOrbit(radius);
 
     planet_position[i] = radius;
 
-    radius += 100;
+    radius += 70;
   }
 
-  drawPlanetInPosition(planet_position[0], planet_angles[0], planet_radius[0], {237.0f, 125.0f, 49.0f}, qtd_rings[0], qtd_satellites[0], {});
-
-  drawPlanetInPosition(planet_position[1], planet_angles[1], planet_radius[1], {132.0f, 60.0f, 12.0f}, qtd_rings[1], qtd_satellites[1], {});
+  if(show_mercury)
+    drawPlanetInPosition(planet_position[0], planet_translate_angles[0], planet_rotate_angles[0], planet_radius[0], {0.93f, 0.49f, 0.23f}, qtd_rings[0], qtd_satellites[0], {});
+  
+  if(show_venus)
+    drawPlanetInPosition(planet_position[1], planet_translate_angles[1], planet_rotate_angles[1], planet_radius[1], {0.52f, 0.23f, 0.11f}, qtd_rings[1], qtd_satellites[1], {});
 
   int earth_sat[] = {1};
-  drawPlanetInPosition(planet_position[2], planet_angles[2], planet_radius[2], {0.0f, 112.0f, 192.0f}, qtd_rings[2], qtd_satellites[2], earth_sat);
+  if (show_earth)
+    drawPlanetInPosition(planet_position[2], planet_translate_angles[2], planet_rotate_angles[2], planet_radius[2], {0.07f, 0.44f, 0.75f}, qtd_rings[2], qtd_satellites[2], earth_sat);
 
   int mars_sat[] = {0, 2};
-  drawPlanetInPosition(planet_position[3], planet_angles[3], planet_radius[3], {1.0f, 0.0f, 0.0f}, qtd_rings[3], qtd_satellites[3], mars_sat);
+  if (show_mars)
+    drawPlanetInPosition(planet_position[3], planet_translate_angles[3], planet_rotate_angles[3], planet_radius[3], {0.92f, 0.27f, 0.24f}, qtd_rings[3], qtd_satellites[3], mars_sat);
 
-  int jup_sat[] = {1};
-  drawPlanetInPosition(planet_position[4], planet_angles[4], planet_radius[4], {255.0f, 192.0f, 0.0f}, qtd_rings[4], qtd_satellites[4], mars_sat);
+  if (show_jupiter)
+    drawPlanetInPosition(planet_position[4], planet_translate_angles[4], planet_rotate_angles[4], planet_radius[4], {0.97f, 0.76f, 0.22f}, qtd_rings[4], qtd_satellites[4], mars_sat);
 
   int saturn_sat[] = {0, 1, 0, 0};
-  drawPlanetInPosition(planet_position[5], planet_angles[5], planet_radius[5], {191.0f, 144.0f, 0.0f}, qtd_rings[5], qtd_satellites[5], saturn_sat);
+  if (show_saturn)
+    drawPlanetInPosition(planet_position[5], planet_translate_angles[5], planet_rotate_angles[5], planet_radius[5], {0.75f, 0.57f, 0.16f}, qtd_rings[5], qtd_satellites[5], saturn_sat);
 
-  int urano_sat[] = {0, 1};
-  drawPlanetInPosition(planet_position[6], planet_angles[6], planet_radius[6], {84.0f, 130.0f, 53.0f}, qtd_rings[6], qtd_satellites[6], saturn_sat);
+  if (show_uranus)
+    drawPlanetInPosition(planet_position[6], planet_translate_angles[6], planet_rotate_angles[6], planet_radius[6], {0.32f, 0.51f, 0.20f}, qtd_rings[6], qtd_satellites[6], saturn_sat);
 
   int netuno_sat[] = {2};
-  drawPlanetInPosition(planet_position[7], planet_angles[7], planet_radius[7], {180.0f, 199.0f, 231.0f}, qtd_rings[7], qtd_satellites[7], netuno_sat);
+  if (show_neptune)
+    drawPlanetInPosition(planet_position[7], planet_translate_angles[7], planet_rotate_angles[7], planet_radius[7], {0.71f, 0.78f, 0.90f}, qtd_rings[7], qtd_satellites[7], netuno_sat);
 
   glutSwapBuffers();
 }
 
-void translationMercury(int angle_index)
+void translationPlanet(int angle_index)
 {
-  planet_angles[0] += 0.1;
+  if (!pause_simulation)
+  {
+    planet_translate_angles[angle_index] += 0.1;
+  }
   glutPostRedisplay();
-  glutTimerFunc(translation_time[0], translationMercury, 1);
+  glutTimerFunc(translation_time[angle_index], translationPlanet, angle_index);
 }
 
-void translationVenus(int angle_index)
+void rotatePlanet(int angle_index)
 {
-  planet_angles[1] += 0.1;
+  if (!pause_simulation)
+  {
+    planet_rotate_angles[angle_index] += 0.1;
+  }
   glutPostRedisplay();
-  glutTimerFunc(translation_time[1], translationVenus, 1);
-}
-void translationEarth(int angle_index)
-{
-  planet_angles[2] += 0.1;
-  glutPostRedisplay();
-  glutTimerFunc(translation_time[2], translationEarth, 1);
-}
-void translationMars(int angle_index)
-{
-  planet_angles[3] += 0.1;
-  glutPostRedisplay();
-  glutTimerFunc(translation_time[3], translationMars, 1);
-}
-void translationJupyter(int angle_index)
-{
-  planet_angles[4] += 0.1;
-  glutPostRedisplay();
-  glutTimerFunc(translation_time[4], translationJupyter, 1);
-}
-void translationSaturn(int angle_index)
-{
-  planet_angles[5] += 0.1;
-  glutPostRedisplay();
-  glutTimerFunc(translation_time[5], translationSaturn, 1);
-}
-
-void translationUranus(int angle_index)
-{
-  planet_angles[6] += 0.1;
-  glutPostRedisplay();
-  glutTimerFunc(translation_time[6], translationUranus, 1);
-}
-
-void translationNeptuno(int angle_index)
-{
-  planet_angles[7] += 0.1;
-  glutPostRedisplay();
-  glutTimerFunc(translation_time[7], translationNeptuno, 1);
+  glutTimerFunc(rotation_time[angle_index], rotatePlanet, angle_index);
 }
 
 void adjustWindow(GLsizei width, GLsizei height)
 {
 
-  glMatrixMode(GL_PROJECTION);
+  glMatrixMode(GL_MODELVIEW);
   glLoadIdentity(); // replace the current matrix with the identity matrix and starts us a fresh because matrix transforms such as glOrpho and glRotate cumulate, basically puts us at (0, 0, 0)
   gluOrtho2D(-width, width, -height, height);
+}
+
+void getKeyboard(int key, int x, int y)
+{
+  switch (key)
+  {
+  case GLUT_KEY_UP:
+    show_orbit = !show_orbit;
+    break;
+  case GLUT_KEY_DOWN:
+    pause_simulation = !pause_simulation;
+    break;
+  }
+}
+
+void Keyboard(unsigned char key, int x, int y)
+{
+  if (key == 27)
+    exit(0);
+  if (key == 49)
+    show_mercury = !show_mercury;
+  if (key == 50)
+    show_venus = !show_venus;
+  if (key == 51)
+    show_earth = !show_earth;
+  if (key == 52)
+    show_mars = !show_mars;
+  if (key == 53)
+    show_jupiter = !show_jupiter;
+  if (key == 54)
+    show_saturn = !show_saturn;
+  if (key == 55)
+    show_uranus = !show_uranus;
+  if (key == 56)
+    show_neptune = !show_neptune;
+  if(key == 112)
+    pause_simulation = !pause_simulation;
+  if(key == 111)
+    show_orbit = !show_orbit;
 }
 
 void initialize()
@@ -256,7 +285,7 @@ int main(int argc, char *argv[])
 
   glutInitWindowPosition(100, 100);
 
-  glutInitWindowSize(1000, 1000);
+  glutInitWindowSize(800, 800);
 
   glutCreateWindow("Sistema Solar");
 
@@ -264,14 +293,13 @@ int main(int argc, char *argv[])
 
   glutDisplayFunc(draw);
 
-  translationMercury(1);
-  translationVenus(1);
-  translationEarth(1);
-  translationMars(1);
-  translationJupyter(1);
-  translationSaturn(1);
-  translationUranus(1);
-  translationNeptuno(1);
+  for (int i = 0; i < 8; i++)
+  {
+    translationPlanet(i);
+    rotatePlanet(i);
+  }
+
+  glutKeyboardFunc(Keyboard);
 
   initialize();
 
