@@ -41,7 +41,7 @@ float planet_radius[8] = {12, 16, 16, 14, 24, 22, 20, 18};
 int qtd_rings[8] = {0, 0, 0, 0, 1, 4, 2, 1};
 int qtd_satellites[8] = {0, 0, 1, 2, 1, 1, 1, 2};
 float rotation_time[8] = {59, 243, 0.24, 0.2437, 0.0955, 0.1014, 0.17, 0.16};
-float translation_time[8] = {87, 225, 365, 687, 1200, 3000, 8400, 1640};
+int translation_time[8] = {87, 225, 365, 687, 1200, 3000, 8400, 1640};
 
 bool show_orbit = true;
 bool show_mercury = true;
@@ -53,6 +53,9 @@ bool show_saturn = true;
 bool show_uranus = true;
 bool show_neptune = true;
 bool pause_simulation = false;
+
+int earth_translate_counter = 0;
+int counter = 0;
 
 PolarCoordinate
 convertToPolarCoordinate(float radius, float angle)
@@ -140,16 +143,54 @@ void drawPlanet(GLfloat planet_radius, RgbColor color, int qtd_rings, int qtd_sa
   drawCircle(planet_radius, GL_POLYGON);
 }
 
-void drawPlanetInPosition(float position, float angle, float rotate_angle, float planet_radius, RgbColor color, int qtd_rings, int qtd_satellites, int *satellites_rings)
+void drawPlanetInPosition(float position, float angle, float rotate_angle, float planet_radius, RgbColor color, int qtd_rings, int qtd_satellites, int *satellites_rings, bool is_earth = false)
 {
   glPushMatrix();
   PolarCoordinate coordinate = convertToPolarCoordinate(position, angle);
   glTranslatef(coordinate.x, coordinate.y, 0);
   glRotatef(rotate_angle, 0.0f, 0.0f, 0.0f);
 
+  if (is_earth) {
+    if (coordinate.x > 269 && counter == 0)
+    {
+      earth_translate_counter += 1;
+      counter = 1;
+    }
+    else if (coordinate.x < 269 && counter == 1)
+    {
+      counter = 0;
+    }
+  }
+
   drawPlanet(planet_radius, color, qtd_rings, qtd_satellites, satellites_rings);
 
   glPopMatrix();
+}
+
+void drawText()
+{
+
+  std::string counter_str = std::to_string(earth_translate_counter);
+
+  glColor3f(1.0, 1.0, 1.0);
+  glRasterPos2f(-790, 600); // define position on the screen
+  char *string1 = "Sistema Solar";
+
+  while (*string1)
+  {
+    glutBitmapCharacter(GLUT_BITMAP_8_BY_13, *string1++);
+  }
+
+  glColor3f(1.0, 1.0, 1.0);
+  glRasterPos2f(-790, 570);
+  char *string2 = "Translacoes da Terra: ";
+  while (*string2)
+  {
+    glutBitmapCharacter(GLUT_BITMAP_8_BY_13, *string2++);
+  }
+  for(int i =0; i < counter_str.length(); i++){
+    glutBitmapCharacter(GLUT_BITMAP_8_BY_13, int(counter_str[i]));
+  }
 }
 
 void draw()
@@ -162,6 +203,8 @@ void draw()
 
   glClear(GL_COLOR_BUFFER_BIT);
 
+  drawText();
+
   drawSun(80);
 
   for (int i = 0; i < 8 && show_orbit; i++)
@@ -173,15 +216,15 @@ void draw()
     radius += 70;
   }
 
-  if(show_mercury)
+  if (show_mercury)
     drawPlanetInPosition(planet_position[0], planet_translate_angles[0], planet_rotate_angles[0], planet_radius[0], {0.93f, 0.49f, 0.23f}, qtd_rings[0], qtd_satellites[0], {});
-  
-  if(show_venus)
+
+  if (show_venus)
     drawPlanetInPosition(planet_position[1], planet_translate_angles[1], planet_rotate_angles[1], planet_radius[1], {0.52f, 0.23f, 0.11f}, qtd_rings[1], qtd_satellites[1], {});
 
   int earth_sat[] = {1};
   if (show_earth)
-    drawPlanetInPosition(planet_position[2], planet_translate_angles[2], planet_rotate_angles[2], planet_radius[2], {0.07f, 0.44f, 0.75f}, qtd_rings[2], qtd_satellites[2], earth_sat);
+    drawPlanetInPosition(planet_position[2], planet_translate_angles[2], planet_rotate_angles[2], planet_radius[2], {0.07f, 0.44f, 0.75f}, qtd_rings[2], qtd_satellites[2], earth_sat, true);
 
   int mars_sat[] = {0, 2};
   if (show_mars)
@@ -252,9 +295,9 @@ void Keyboard(unsigned char key, int x, int y)
     show_uranus = !show_uranus;
   if (key == 56)
     show_neptune = !show_neptune;
-  if(key == 112)
+  if (key == 112)
     pause_simulation = !pause_simulation;
-  if(key == 111)
+  if (key == 111)
     show_orbit = !show_orbit;
 }
 
