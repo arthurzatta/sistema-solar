@@ -232,19 +232,6 @@ void adjustWindow(GLsizei width, GLsizei height)
   gluOrtho2D(-width, width, -height, height);
 }
 
-void getKeyboard(int key, int x, int y)
-{
-  switch (key)
-  {
-  case GLUT_KEY_UP:
-    show_orbit = !show_orbit;
-    break;
-  case GLUT_KEY_DOWN:
-    pause_simulation = !pause_simulation;
-    break;
-  }
-}
-
 void Keyboard(unsigned char key, int x, int y)
 {
   if (key == 27)
