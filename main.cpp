@@ -96,7 +96,7 @@ void drawSun(GLfloat radius)
   drawCircle(radius, GL_POLYGON);
 }
 
-void drawPlanet(GLfloat planet_radius, RgbColor color, int qtd_rings, int qtd_satellites, int *satellites)
+void drawPlanet(GLfloat planet_radius, GLfloat rotate_angle, RgbColor color, int qtd_rings, int qtd_satellites, int *satellites)
 {
   float ring_radius = planet_radius + 10;
 
@@ -118,22 +118,24 @@ void drawPlanet(GLfloat planet_radius, RgbColor color, int qtd_rings, int qtd_sa
   // Desenha os satelites
   for (int j = 0; j < qtd_satellites; j++)
   {
-
-    PolarCoordinate coordinate = convertToPolarCoordinate(ring_radius, 1);
+    PolarCoordinate coordinate = convertToPolarCoordinate(ring_radius, 1 + rotate_angle);
 
     glPushMatrix();
     glColor3f(1.0f, 1.0f, 1.0f);
     glTranslatef(coordinate.x, coordinate.y, 0);
+    glRotatef(1 + rotate_angle, 0.0f, 0.0f, 0.0f);
     drawCircle(6, GL_POLYGON);
     glPopMatrix();
 
     if (satellites[j] > 1)
     {
-      PolarCoordinate coordinate = convertToPolarCoordinate(ring_radius, 180);
+      float new_angle = 180 + rotate_angle;
+      PolarCoordinate coordinate = convertToPolarCoordinate(ring_radius, new_angle);
 
       glPushMatrix();
       glColor3f(1.0f, 1.0f, 1.0f);
       glTranslatef(coordinate.x, coordinate.y, 0);
+      glRotatef(new_angle, 0.0f, 0.0f, 0.0f);
       drawCircle(6, GL_POLYGON);
       glPopMatrix();
     }
@@ -148,9 +150,9 @@ void drawPlanetInPosition(float position, float angle, float rotate_angle, float
   glPushMatrix();
   PolarCoordinate coordinate = convertToPolarCoordinate(position, angle);
   glTranslatef(coordinate.x, coordinate.y, 0);
-  glRotatef(rotate_angle, 0.0f, 0.0f, 0.0f);
 
-  if (is_earth) {
+  if (is_earth)
+  {
     if (coordinate.x > 269 && counter == 0)
     {
       earth_translate_counter += 1;
@@ -162,7 +164,7 @@ void drawPlanetInPosition(float position, float angle, float rotate_angle, float
     }
   }
 
-  drawPlanet(planet_radius, color, qtd_rings, qtd_satellites, satellites_rings);
+  drawPlanet(planet_radius, rotate_angle, color, qtd_rings, qtd_satellites, satellites_rings);
 
   glPopMatrix();
 }
@@ -188,7 +190,8 @@ void drawText()
   {
     glutBitmapCharacter(GLUT_BITMAP_8_BY_13, *string2++);
   }
-  for(int i =0; i < counter_str.length(); i++){
+  for (int i = 0; i < counter_str.length(); i++)
+  {
     glutBitmapCharacter(GLUT_BITMAP_8_BY_13, int(counter_str[i]));
   }
 }
@@ -247,14 +250,14 @@ void draw()
   glutSwapBuffers();
 }
 
-void translationPlanet(int angle_index)
+void translatePlanet(int angle_index)
 {
   if (!pause_simulation)
   {
     planet_translate_angles[angle_index] += 0.1;
   }
   glutPostRedisplay();
-  glutTimerFunc(translation_time[angle_index], translationPlanet, angle_index);
+  glutTimerFunc(translation_time[angle_index], translatePlanet, angle_index);
 }
 
 void rotatePlanet(int angle_index)
@@ -264,7 +267,7 @@ void rotatePlanet(int angle_index)
     planet_rotate_angles[angle_index] += 0.1;
   }
   glutPostRedisplay();
-  glutTimerFunc(rotation_time[angle_index], rotatePlanet, angle_index);
+  glutTimerFunc(rotation_time[angle_index] + 50, rotatePlanet, angle_index);
 }
 
 void adjustWindow(GLsizei width, GLsizei height)
@@ -325,7 +328,7 @@ int main(int argc, char *argv[])
 
   for (int i = 0; i < 8; i++)
   {
-    translationPlanet(i);
+    translatePlanet(i);
     rotatePlanet(i);
   }
 
